@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>AGROTECH</title>
+    <link rel="stylesheet" href="/style.css">
+    <script>
+        async function fetchData() {
+            console.log('Fetching data...');
+            try {
+                const response = await fetch('/data');
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}`);
+                }
+                const data = await response.json();
+                document.getElementById('temperature').innerText = `${data.temperature} °C`;
+                document.getElementById('humidity').innerText = `${data.humidity} %`;
+                document.getElementById('soilPercentage').innerText = `${data.soilPercentage} %`;
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        window.onload = function() {
+            fetchData(); // Fetch data once on page load
+            setInterval(fetchData, 1000); // Set up auto-refresh every second
+        };
+    </script>
+</head>
+<body>
+    <h1>AGROTECH</h1>
+    <div class='container'>
+        <div class='card-container'>
+            <div class='card1'>
+                <h3>Suhu &#127777;</h3>
+                <span id='temperature'> °C</span>
+            </div>
+            <div class='card2'>
+                <h3>Kelembaban Udara &#9729;</h3>
+                <span id='humidity'> %</span>
+            </div>
+            <div class='card3'>
+                <h3>Kelembaban Tanah &#x1F322;</h3>
+                <span id='soilPercentage'> %</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
