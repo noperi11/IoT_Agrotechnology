@@ -1,3 +1,4 @@
+//Library Yang Digunakan
 #include <Adafruit_Sensor.h>
 #include <Arduino.h>
 #include <DHT.h>
@@ -8,27 +9,33 @@
 #include <AsyncTCP.h>
 #include <LittleFS.h>
 
-
+// PIN yang digunakan
 #define DHTPIN 4// Masukkan pin sensor DHT
 #define DHTTYPE DHT21
 #define RELAY1_PIN 26// Masukkan pin relay 1
 #define RELAY2_PIN 25// Masukkan pin relay 2
 #define RELAY3_PIN 17// Masukkan pin relay 3
-
-DHT dht(DHTPIN, DHTTYPE);
-LiquidCrystal_I2C lcd(0x27, 20, 4);
-
 const int soilPin = 34; // Masukkan pin sensor soil moisture
 
-// Replace with your network credentials
-const char* ssid = "UGMURO-INET";
-const char* password = "Gepuk15000";
+//Inisialisasi DHT Sensor
+DHT dht(DHTPIN, DHTTYPE);
 
-// Create an AsyncWebServer object on port 80
+//Inisialisasi i2c LCD
+LiquidCrystal_I2C lcd(0x27, 20, 4);
+
+// SSID dan PW Wifi
+const char* ssid = "your-ssid"; //ganti dengan ssid wifi kamu
+const char* password = "your-password"; //ganti dengan password wifi kamu
+
+// Jalankan Webserver Asinkronus
 AsyncWebServer server(80);
 
 void setup() {
-  // Initialize LCD
+  
+  // Inisialisasi Serial Monitor
+  Serial.begin(115200);
+
+  // Mulai LCD
   lcd.init();
   lcd.backlight();
   lcd.setCursor(3, 0);
@@ -37,67 +44,78 @@ void setup() {
   lcd.print("WS Agroteknologi IoT");
   lcd.setCursor(3, 3);
   lcd.print("-- UG MURO --");
+  
   delay(5000);
+  
   lcd.clear();
+  
   delay(2000);
 
-  // Initialize sensors and pins
+  // Inisialisasi mode pin dari sensor dan relay
   pinMode(soilPin, INPUT);
-  dht.begin();
   pinMode(RELAY1_PIN, OUTPUT);
   pinMode(RELAY2_PIN, OUTPUT);
   pinMode(RELAY3_PIN, OUTPUT);
-  digitalWrite(RELAY1_PIN, HIGH);  // HIGH to turn relay OFF
-  digitalWrite(RELAY2_PIN, HIGH);  // HIGH to turn relay OFF
-  digitalWrite(RELAY3_PIN, HIGH);  // HIGH to turn relay OFF
 
-  // Initialize Serial Monitor
-  Serial.begin(115200);
+  //Mulai menyalakan sensor DHT
+  dht.begin();
 
-  // Initialize LittleFS
+  //Mematikan relay
+  digitalWrite(RELAY1_PIN, LOW);
+  digitalWrite(RELAY2_PIN, LOW); 
+  digitalWrite(RELAY3_PIN, LOW);  
+
+  // Inisialisasi Little FS
   if (!LittleFS.begin()) {
-    Serial.println("An error has occurred while mounting LittleFS");
+    Serial.println("Error Mounting Little FS");
     return;
   }
 
-  // Connect to Wi-Fi
+  // Memulai koneksi ke WIFI
   WiFi.begin(ssid, password);
+
+  //Looping Untuk mencoba koneksi ke WiFi
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
+
+  //Output ke Serial Monitor bahwa sudah terkoneksi ke WiFi
   Serial.println("Connected to WiFi");
   Serial.print("IP Address: ");
   Serial.println(WiFi.localIP());
 
-  // Handle HTTP GET requests to root URL
+  // Menghandle HTTP Request ke Index.html
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(LittleFS, "/index.html", "text/html");
   });
 
+  // Untuk handle CSS Index.html
   server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(LittleFS, "/style.css", "text/css");
   });
 
+  // Memparsing data dari sensor ke Server
   server.on("/data", HTTP_GET, [](AsyncWebServerRequest *request){
   String json = "{\"temperature\":" + String(dht.readTemperature()) +
                  ",\"humidity\":" + String(dht.readHumidity()) +
                  ",\"soilPercentage\":" + String(map(analogRead(soilPin), 2048, 0, 0, 100)) + "}";
   request->send(200, "application/json", json);
 });
-
-
+  //Memulai Server
   server.begin();
 }
 
 
 void loop() {
+  // Inisialisasi variabel untuk menyimpan data dari sensor
   float temperature = dht.readTemperature();
   float humidity = dht.readHumidity();
   int soilValue = analogRead(soilPin);
   int soilPercentage = map(soilValue, 2048, 0, 0, 100);
   soilPercentage = constrain(soilPercentage, 0, 100);
 
+  // Menampilkan data ke LCD I2C
   lcd.setCursor(5, 0);
   lcd.print("Monitoring");
 
@@ -124,12 +142,14 @@ void loop() {
   lcd.setCursor(17, 3);
   lcd.print("%");
 
+  // Proses 1
   if (temperature > 24 && humidity > 70) {
     digitalWrite(RELAY1_PIN, HIGH); // Relay 1 menyala
   } else {
     digitalWrite(RELAY1_PIN, LOW); // Relay 1 mati
   }
 
+  // Proses 2
   if (soilPercentage < 30) {
     digitalWrite(RELAY3_PIN, HIGH); // Relay 3 (pompa) menyala
   } else {
