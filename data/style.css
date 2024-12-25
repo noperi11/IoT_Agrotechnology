@@ -1,0 +1,39 @@
+body {
+    font-family: Sans-serif, Helvetica;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(to right, #658147, #E7F0DC);
+    color: #333;
+}
+h1 {
+    text-align: center;
+    color: #333;
+    padding: 20px;
+    margin: 0;
+}
+.container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+}
+.card-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+.card1, .card2, .card3 {
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    background-color: #E7F0DC;
+}
+.card1 h3, .card2 h3, .card3 h3 {
+    margin-bottom: 10px;
+}
+.card1 p, .card2 p, .card3 p {
+    font-size: 24px;
+    font-weight: bold;
+    margin: 0;
+}
