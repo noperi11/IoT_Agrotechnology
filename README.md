@@ -9,7 +9,17 @@ Penerapan teknologi IoT di bidang pertanian dan teknologi agro untuk meningkatka
 |--------|----------|
 | Esp32 | Mikrokontroller |
 | I2C | Layar untuk Menampilkan Data |
-| DHT 22 | Sensor Suhu dan Kelembapan Udara|
+| DHT 21 | Sensor Suhu dan Kelembapan Udara|
 | Soil Moisture Sensor | Sensor Kelembapan Tanah |
 | Pompa | Mengalirkan Air |
 | Relay | Pengontrol Pompa |
+
+## Pin Yang Digunakan
+| Perangkat | Pin |
+|--------|----------|
+| DHT 21 | 4 |
+| I2C | SDA,SDC |
+| Soil Moisture Sensor | 34 |
+| Relay 1 | 26 |
+| Relay 2 | 25 |
+| Relay 3 | 17 |
