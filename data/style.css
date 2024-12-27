@@ -1,39 +1,131 @@
-body {
-    font-family: Sans-serif, Helvetica;
-    margin: 0;
-    padding: 0;
-    background: linear-gradient(to right, #658147, #E7F0DC);
-    color: #333;
-}
-h1 {
-    text-align: center;
-    color: #333;
-    padding: 20px;
-    margin: 0;
-}
-.container {
-    max-width: 800px;
-    margin: 20px auto;
-    padding: 20px;
-}
-.card-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-}
-.card1, .card2, .card3 {
-    padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    background-color: #E7F0DC;
-}
-.card1 h3, .card2 h3, .card3 h3 {
-    margin-bottom: 10px;
-}
-.card1 p, .card2 p, .card3 p {
-    font-size: 24px;
-    font-weight: bold;
-    margin: 0;
-}
+
+	@import url('https://fonts.googleapis.com/css2?family=Fredoka&display=swap');
+	body{
+	margin:0;
+	background-image: url("https://blue.kumparan.com/image/upload/fl_progressive,fl_lossy,c_fill,q_auto:best,w_640/v1634025439/01h3xpga9q6f2922yqc2q0bhr3.jpg");
+	background-repeat: no-repeat;
+	font-family:"Fredoka", serif;
+	}
+	
+
+      .c1{
+	
+	height:80vw;
+	margin:0 auto;
+	border:0px solid green;
+	}
+	
+
+	.top{
+	padding:30px;
+	padding-top:10px;
+	font-size:30px;
+	color:white;
+	font-family:"Fredoka", serif;
+	
+	}
+
+	h3{
+	background-color: rgba(255,255,255,0.2);
+	color: white;
+	padding: 20 auto;
+	padding-bottom: 2px;
+	border: 1px solid black;
+	border-radius: 40px;
+	text-align: center;
+	background-opacity: 0.2;
+	}
+
+	.mid{
+	margin:30px auto;
+	width:55vw;
+	border:1px solid black;
+	border-radius:20px;
+	height:5px;
+	background-color:black;
+	}
+
+	.fredoka-<uniquifier> {
+	 font-family: "Fredoka", serif;
+  	 font-optical-sizing: auto;
+  	 font-weight: 300;
+  	 font-style: normal;
+  	 font-variation-settings:
+    		"wdth" 100;
+	}
+
+      .c2{
+	background-color: white;
+	height:60vw;
+	width:100vw;
+	margin:0;
+	border:1px solid white;
+	border-top-right-radius:40px;
+	border-top-left-radius:40px;
+	}
+
+	.cardsc{
+	display:flex;
+	flex-direction:row;
+	}
+
+	.a{
+	margin:20px auto;
+	margin-bottom:0px;
+	width:90%;
+	border:3px solid black;
+	border-radius:20px;
+	height:40vw;
+	background-color: #61933A;
+	display: flex;
+	flex-direction: column;	
+	}
+
+	.kt{
+	margin: 4vw;
+	font-size: 8vw;
+	color: white;
+	}
+		
+	.tn{
+	margin-left:4vw;
+	font-size: 11vw;
+	color: white;
+	font-weight: bold;
+	} 
+
+	.b{
+	margin:5px auto;
+	width:42vw;
+	border:3px solid black;
+	border-radius:20px;
+	height:40vw;
+	background-color: #61933A;	
+	}
+
+	.sh1{
+	font-size: 10vw;
+	margin: 4vw;
+	color: white;
+	}
+
+	.sh2{
+	margin: 4vw;
+	font-size: 15vw;
+	color: white;
+	font-weight: bold;
+	}
+
+	.ku1{
+	font-size: 10vw;
+	margin: 4vw;
+	color: white;
+	}
+
+	.ku2{
+	margin: 4vw;
+	font-size: 15vw;
+	color: white;
+	font-weight: bold;
+	}
+  
