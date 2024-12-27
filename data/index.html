@@ -1,12 +1,52 @@
 <!DOCTYPE html>
-<html lang='en'>
+<html>
 <head>
     <meta charset='UTF-8'>
     <meta name='viewport' content='width=device-width, initial-scale=1.0'>
     <title>AGROTECH</title>
-    <link rel="stylesheet" href="/style.css">
-    <script>
-        async function fetchData() {
+    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+	<div class="c1">
+		<div class="top">
+			<h3>- UG Muro -</h3>
+			<h1>IoT <br>Agrotech</h1>
+		</div>
+	</div><br>
+	
+	<div class= "c2">
+		<div class="mid"></div>
+		<div class="a">
+			<span class="kt">Kelembapan Tanah</span><br>
+			<span class="tn"> 40%</span>
+		</div>
+		<br>
+		<div class="cardsc">
+			<div class="b">
+					<span class="sh1"> 
+					Suhu	
+					</span>
+					<br>
+					<span class="sh2">
+					31°C
+					</span>
+			</div>
+			<div class="b">
+					<span class="ku1"> 
+					Udara	
+					</span>
+					<br>
+					<span class="ku2">
+					30%
+					</span>
+			</div>
+		</div>
+	</div>
+</body>
+<script>
+async function fetchData() {
             console.log('Fetching data...');
             try {
                 const response = await fetch('/data');
@@ -14,9 +54,9 @@
                     throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}`);
                 }
                 const data = await response.json();
-                document.getElementById('temperature').innerText = `${data.temperature} °C`;
-                document.getElementById('humidity').innerText = `${data.humidity} %`;
-                document.getElementById('soilPercentage').innerText = `${data.soilPercentage} %`;
+                document.getElementById('sh2').innerText = `${data.temperature} °C`;
+                document.getElementById('ku2').innerText = `${data.humidity} %`;
+                document.getElementById('tn').innerText = `${data.soilPercentage} %`;
             } catch (error) {
                 console.error('Error:', error);
             }
@@ -26,25 +66,5 @@
             fetchData(); // Fetch data once on page load
             setInterval(fetchData, 1000); // Set up auto-refresh every second
         };
-    </script>
-</head>
-<body>
-    <h1>AGROTECH</h1>
-    <div class='container'>
-        <div class='card-container'>
-            <div class='card1'>
-                <h3>Suhu &#127777;</h3>
-                <span id='temperature'> °C</span>
-            </div>
-            <div class='card2'>
-                <h3>Kelembaban Udara &#9729;</h3>
-                <span id='humidity'> %</span>
-            </div>
-            <div class='card3'>
-                <h3>Kelembaban Tanah &#x1F322;</h3>
-                <span id='soilPercentage'> %</span>
-            </div>
-        </div>
-    </div>
-</body>
+</script>
 </html>
