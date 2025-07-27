@@ -1,4 +1,3 @@
-//Library Yang Digunakan
 #include <Adafruit_Sensor.h>
 #include <Arduino.h>
 #include <DHT.h>
@@ -8,153 +7,196 @@
 #include <ESPAsyncWebSrv.h>
 #include <AsyncTCP.h>
 #include <LittleFS.h>
+#include <PubSubClient.h>
 
-// PIN yang digunakan
-#define DHTPIN 4// Masukkan pin sensor DHT
+// --- Konfigurasi Pin ---
+#define DHTPIN 4
 #define DHTTYPE DHT21
-#define RELAY1_PIN 26// Masukkan pin relay 1
-#define RELAY2_PIN 25// Masukkan pin relay 2
-#define RELAY3_PIN 17// Masukkan pin relay 3
-const int soilPin = 34; // Masukkan pin sensor soil moisture
+#define SOIL_PIN 34
+#define RELAY1_PIN 26
+#define RELAY2_PIN 25
+#define RELAY3_PIN 17
 
-//Inisialisasi DHT Sensor
+#define TRIG_PIN 18
+#define ECHO_PIN 5
+
+#define LED_GREEN 23
+#define LED_YELLOW 22
+#define LED_RED 21
+
+// --- Konfigurasi WiFi & ThingsBoard ---
+const char* ssid = "Wokwi-GUEST";
+const char* password = "";
+const char* tb_server = "thingsboard.cloud";
+const int tb_port = 1883;
+const char* tb_token = "BxAEfPxNaNBmMHDVLqgB";
+
+// --- Objek Library ---
 DHT dht(DHTPIN, DHTTYPE);
-
-//Inisialisasi i2c LCD
 LiquidCrystal_I2C lcd(0x27, 20, 4);
-
-// SSID dan PW Wifi
-const char* ssid = "your-ssid"; //ganti dengan ssid wifi kamu
-const char* password = "your-password"; //ganti dengan password wifi kamu
-
-// Jalankan Webserver Asinkronus
 AsyncWebServer server(80);
+WiFiClient espClient;
+PubSubClient client(espClient);
 
+// --- Setup ---
 void setup() {
-  
-  // Inisialisasi Serial Monitor
   Serial.begin(115200);
-
-  // Mulai LCD
+  dht.begin();
   lcd.init();
   lcd.backlight();
-  lcd.setCursor(3, 0);
-  lcd.print("Selamat Datang!");
-  lcd.setCursor(0, 1);
-  lcd.print("WS Agroteknologi IoT");
-  lcd.setCursor(3, 3);
-  lcd.print("-- UG MURO --");
-  
+  lcd.setCursor(3, 0); lcd.print("Selamat Datang!");
+  lcd.setCursor(0, 1); lcd.print("WS Agroteknologi IoT");
+  lcd.setCursor(3, 3); lcd.print("-- UG MURO --");
   delay(5000);
-  
   lcd.clear();
-  
-  delay(2000);
 
-  // Inisialisasi mode pin dari sensor dan relay
-  pinMode(soilPin, INPUT);
+  pinMode(SOIL_PIN, INPUT);
   pinMode(RELAY1_PIN, OUTPUT);
   pinMode(RELAY2_PIN, OUTPUT);
   pinMode(RELAY3_PIN, OUTPUT);
-
-  //Mulai menyalakan sensor DHT
-  dht.begin();
-
-  //Mematikan relay
   digitalWrite(RELAY1_PIN, LOW);
-  digitalWrite(RELAY2_PIN, LOW); 
-  digitalWrite(RELAY3_PIN, LOW);  
+  digitalWrite(RELAY2_PIN, LOW);
+  digitalWrite(RELAY3_PIN, LOW);
 
-  // Inisialisasi Little FS
-  if (!LittleFS.begin()) {
-    Serial.println("Error Mounting Little FS");
-    return;
-  }
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+  pinMode(LED_GREEN, OUTPUT);
+  pinMode(LED_YELLOW, OUTPUT);
+  pinMode(LED_RED, OUTPUT);
 
-  // Memulai koneksi ke WIFI
   WiFi.begin(ssid, password);
-
-  //Looping Untuk mencoba koneksi ke WiFi
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
-
-  //Output ke Serial Monitor bahwa sudah terkoneksi ke WiFi
-  Serial.println("Connected to WiFi");
-  Serial.print("IP Address: ");
+  Serial.println("\nWiFi Terhubung!");
   Serial.println(WiFi.localIP());
 
-  // Menghandle HTTP Request ke Index.html
+  client.setServer(tb_server, tb_port);
+  client.setCallback(callback);
+
+  if (!LittleFS.begin()) {
+    Serial.println("Gagal mounting LittleFS");
+    return;
+  }
+
+  // Web Server
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(LittleFS, "/index.html", "text/html");
   });
-
-  // Untuk handle CSS Index.html
   server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(LittleFS, "/style.css", "text/css");
   });
-
-  // Memparsing data dari sensor ke Server
   server.on("/data", HTTP_GET, [](AsyncWebServerRequest *request){
-  String json = "{\"temperature\":" + String(dht.readTemperature()) +
-                 ",\"humidity\":" + String(dht.readHumidity()) +
-                 ",\"soilPercentage\":" + String(map(analogRead(soilPin), 2048, 0, 0, 100)) + "}";
-  request->send(200, "application/json", json);
-});
-  //Memulai Server
+    float suhu = dht.readTemperature();
+    float kelembaban = dht.readHumidity();
+    int soil = analogRead(SOIL_PIN);
+    int soilPct = map(soil, 2048, 0, 0, 100);
+    soilPct = constrain(soilPct, 0, 100);
+    String json = "{\"temperature\":" + String(suhu) +
+                  ",\"humidity\":" + String(kelembaban) +
+                  ",\"soilPercentage\":" + String(soilPct) + "}";
+    request->send(200, "application/json", json);
+  });
+
   server.begin();
 }
 
-
+// --- Loop ---
 void loop() {
-  // Inisialisasi variabel untuk menyimpan data dari sensor
-  float temperature = dht.readTemperature();
-  float humidity = dht.readHumidity();
-  int soilValue = analogRead(soilPin);
-  int soilPercentage = map(soilValue, 2048, 0, 0, 100);
-  soilPercentage = constrain(soilPercentage, 0, 100);
-
-  // Menampilkan data ke LCD I2C
-  lcd.setCursor(5, 0);
-  lcd.print("Monitoring");
-
-  lcd.setCursor(0, 1);
-  lcd.print("Suhu   : ");
-  lcd.setCursor(8, 1);
-  lcd.print(temperature);
-  lcd.setCursor(17, 1);
-  lcd.print("C");
-
-  lcd.setCursor(0, 2);
-  lcd.print("K.Udara: ");
-  lcd.setCursor(8, 2);
-  lcd.print(humidity);
-  lcd.setCursor(17, 2);
-  lcd.print("%");
-
-  lcd.setCursor(0, 3);
-  lcd.print("K.Tanah: ");
-  lcd.setCursor(9, 3);
-  lcd.print("       ");
-  lcd.setCursor(9, 3);
-  lcd.print(soilPercentage);
-  lcd.setCursor(17, 3);
-  lcd.print("%");
-
-  // Proses 1
-  if (temperature > 24 && humidity > 70) {
-    digitalWrite(RELAY1_PIN, HIGH); // Relay 1 menyala
-  } else {
-    digitalWrite(RELAY1_PIN, LOW); // Relay 1 mati
+  if (!client.connected()) {
+    reconnect();
   }
+  client.loop();
 
-  // Proses 2
-  if (soilPercentage < 30) {
-    digitalWrite(RELAY3_PIN, HIGH); // Relay 3 (pompa) menyala
+  float suhu = dht.readTemperature();
+  float kelembaban = dht.readHumidity();
+  int soilVal = analogRead(SOIL_PIN);
+  int soilPct = map(soilVal, 2048, 0, 0, 100);
+  soilPct = constrain(soilPct, 0, 100);
+  float jarak = getDistanceCM();
+
+  // LCD (tanpa menampilkan jarak)
+  lcd.setCursor(5, 0); lcd.print("Monitoring");
+  lcd.setCursor(0, 1); lcd.print("Suhu   : ");
+  lcd.setCursor(8, 1); lcd.print(suhu);
+  lcd.setCursor(17, 1); lcd.print("C");
+
+  lcd.setCursor(0, 2); lcd.print("K.Udara: ");
+  lcd.setCursor(8, 2); lcd.print(kelembaban);
+  lcd.setCursor(17, 2); lcd.print("%");
+
+  lcd.setCursor(0, 3); lcd.print("K.Tanah: ");
+  lcd.setCursor(9, 3); lcd.print("     ");
+  lcd.setCursor(9, 3); lcd.print(soilPct);
+  lcd.setCursor(17, 3); lcd.print("%");
+
+  // Kontrol Relay
+  digitalWrite(RELAY1_PIN, (suhu > 24 && kelembaban > 70) ? HIGH : LOW);
+  digitalWrite(RELAY3_PIN, (soilPct < 30) ? HIGH : LOW);
+
+  // Kontrol LED berdasarkan jarak
+  kontrolLED(jarak);
+
+  // Kirim ke ThingsBoard
+  String data = "{";
+  data += "\"Suhu\":" + String(suhu) + ",";
+  data += "\"Kelembaban\":" + String(kelembaban) + ",";
+  data += "\"Tinggi Air\":" + String(jarak) + ",";
+  data += "\"Soil Moisture\":" + String(soilPct);
+  data += "}";
+  char payload[data.length() + 1];
+  data.toCharArray(payload, sizeof(payload));
+  client.publish("v1/devices/me/telemetry", payload);
+
+  Serial.println("Data terkirim ke ThingsBoard.");
+  delay(5000);
+}
+
+// --- Fungsi Jarak Ultrasonik ---
+float getDistanceCM() {
+  digitalWrite(TRIG_PIN, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+  long duration = pulseIn(ECHO_PIN, HIGH);
+  return duration * 0.034 / 2.0;
+}
+
+// --- Fungsi LED Berdasarkan Jarak ---
+void kontrolLED(float jarak) {
+  if (jarak > 30) {
+    setLED(HIGH, LOW, LOW); // Merah
+  } else if (jarak >= 15 && jarak <= 30) {
+    setLED(LOW, HIGH, LOW); // Kuning
   } else {
-    digitalWrite(RELAY3_PIN, LOW); // Relay 3 (pompa) mati
+    setLED(LOW, LOW, HIGH); // Hijau
   }
+}
 
-  delay(1000);
+void setLED(bool red, bool yellow, bool green) {
+  digitalWrite(LED_RED, red);
+  digitalWrite(LED_YELLOW, yellow);
+  digitalWrite(LED_GREEN, green);
+}
+
+// --- Callback MQTT ---
+void callback(char* topic, byte* payload, unsigned int length) {
+  Serial.print("Pesan dari topic: ");
+  Serial.println(topic);
+}
+
+// --- Reconnect MQTT ---
+void reconnect() {
+  while (!client.connected()) {
+    Serial.print("Menghubungkan ke ThingsBoard...");
+    if (client.connect("ESP32Client", tb_token, "")) {
+      Serial.println("Berhasil");
+    } else {
+      Serial.print("Gagal, status=");
+      Serial.println(client.state());
+      delay(5000);
+    }
+  }
 }
